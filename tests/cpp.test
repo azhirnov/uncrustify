@@ -1737,3 +1737,9 @@
 60191  cpp/Issue_4795_union_blank_lines.cfg                 cpp/Issue_4795_union_blank_lines.cpp
 60192  cpp/Issue_4795_union_spacing.cfg                     cpp/Issue_4795_union_spacing.cpp
 60193  cpp/Issue_4795_union_var_align.cfg                   cpp/Issue_4795_union_var_align.cpp
+60194  cpp/sp_num_type_func.cfg                            cpp/sp_num_type_func.cpp
+60195  cpp/preserve_source_layout.cfg                      cpp/preserve_source_layout.cpp
+60196  cpp/ae_layout.cfg                                   cpp/ae_layout.cpp
+60197  cpp/ae_calls_endif.cfg                              cpp/ae_calls_endif.cpp
+60198  cpp/ae_statement_lines.cfg                          cpp/ae_statement_lines.cpp
+60199  cpp/ae_field_declarations.cfg                       cpp/ae_field_declarations.cpp

@@ -13,6 +13,7 @@
 
 class Chunk;
 class UncText;
+class SourceLayout;
 
 /**
  * Test the input string to see if it satisfies the criteria
@@ -51,7 +52,7 @@ int find_enable_processing_comment_marker(const UncText &text, std::size_t start
  * All the tokens are inserted before ref. If ref is Chunk::NullChunkPtr, they are inserted
  * at the end of the list.  Line numbers are relative to the start of the data.
  */
-void tokenize(const std::deque<int> &data, Chunk *ref);
+void tokenize(const std::deque<int> &data, Chunk *ref, SourceLayout *layout = nullptr);
 
 
 #endif /* TOKENIZER_TOKENIZE_H_INCLUDED */

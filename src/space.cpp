@@ -397,6 +397,25 @@ static iarf_e do_space(Chunk *first, Chunk *second, int &min_sp)
       return(IARF_REMOVE);
    }
 
+   // Declaration interiors can use a different style from function calls.
+   if (  options::sp_inside_fparen_decl() != IARF_IGNORE
+      && !first->IsComment() && !second->IsComment()
+      && !(first->Is(E_Token::CT_FPAREN_OPEN) && second->Is(E_Token::CT_FPAREN_CLOSE)))
+   {
+      Chunk         *paren = first->Is(E_Token::CT_FPAREN_OPEN) ? first
+                     : second->Is(E_Token::CT_FPAREN_CLOSE) ? second : Chunk::NullChunkPtr;
+      const E_Token parent      = paren->GetParentType();
+      const bool    class_paren = parent == E_Token::CT_FUNC_CLASS_DEF || parent == E_Token::CT_FUNC_CLASS_PROTO;
+      Chunk         *open       = paren->Is(E_Token::CT_FPAREN_CLOSE) ? paren->GetOpeningParen() : paren;
+
+      if (  parent == E_Token::CT_FUNC_DEF || parent == E_Token::CT_FUNC_PROTO
+         || (class_paren && !open->GetPrevNcNnl()->TestFlags(PCF_IN_CONST_ARGS)))
+      {
+         log_rule("sp_inside_fparen_decl");
+         return(options::sp_inside_fparen_decl());
+      }
+   }
+
    if (second->Is(E_Token::CT_SEMICOLON))                       // see the tests cpp:34517-34519
    {
       if (  first->Is(E_Token::CT_VBRACE_OPEN)                  // Issue #2942
@@ -1888,6 +1907,22 @@ static iarf_e do_space(Chunk *first, Chunk *second, int &min_sp)
    if (  first->Is(E_Token::CT_FUNC_CLASS_DEF)
       || first->Is(E_Token::CT_FUNC_CLASS_PROTO))
    {
+      // Destructor calls and bitwise complements can retain a constructor
+      // name classification even though their parentheses identify a call.
+      // Delegating initializers can retain a constructor parent as well.
+      if (  options::preserve_source_layout() && second->Is(E_Token::CT_FPAREN_OPEN)
+         && (second->GetParentType() == E_Token::CT_FUNC_CALL || first->TestFlags(PCF_IN_CONST_ARGS)))
+      {
+         if (  options::sp_func_call_paren_empty() != IARF_IGNORE
+            && second->GetNextNcNnl()->Is(E_Token::CT_FPAREN_CLOSE))
+         {
+            log_rule("sp_func_call_paren_empty");
+            return(options::sp_func_call_paren_empty());
+         }
+         log_rule("sp_func_call_paren");
+         return(options::sp_func_call_paren());
+      }
+
       if (  (options::sp_func_class_paren_empty() != IARF_IGNORE)
          && second->Is(E_Token::CT_FPAREN_OPEN))
       {
@@ -3029,6 +3064,11 @@ static iarf_e do_space(Chunk *first, Chunk *second, int &min_sp)
    if (  second->Is(E_Token::CT_FUNC_PROTO)
       || second->Is(E_Token::CT_FUNC_DEF))
    {
+      if (options::sp_type_func() & IARF_ADD)
+      {
+         min_sp = options::sp_num_type_func();
+      }
+
       if (  first->IsNot(E_Token::CT_PTR_TYPE)
          && first->IsNot(E_Token::CT_BYREF))
       {

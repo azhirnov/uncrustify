@@ -51,6 +51,23 @@ using std::string;
 extern Option<line_end_e>
 newlines; // = LE_AUTO
 
+// Preserve existing line breaks, indentation, preprocessor directives, comments,
+// literals, brace spacing and equivalent tabs. Apply horizontal spacing and
+// alignment on other rows, retaining all gaps on rows that would be reindented.
+// Uppercase macro calls containing statements or declarations are kept opaque.
+// Token-changing and newline-rewriting options are ignored in the output,
+// except that nl_end_of_file may add a final newline. Disabled by default.
+extern Option<bool>
+preserve_source_layout;
+
+// In source-preserving output, split comma-separated class/struct/union fields
+// into declarations on separate lines, repeating their common type. Pointer
+// and reference declarators retain their own qualifiers. Macro bodies, compact
+// single-line types, comments and complex declarators retain their layout.
+// Disabled by default.
+extern Option<bool>
+mod_split_field_decl;
+
 // The original size of tabs in the input.
 extern BoundedOption<unsigned, 1, 32>
 input_tab_size; // = 8
@@ -283,6 +300,11 @@ sp_inside_paren;
 // Add or remove space between nested parentheses, i.e. '((' vs. ') )'.
 extern Option<iarf_e>
 sp_paren_paren;
+
+// Add or remove space between nested closing braces and parentheses, i.e.
+// '})' and ')}'. Only used with preserve_source_layout.
+extern Option<iarf_e>
+sp_nested_close_brace_paren;
 
 // Add or remove space between back-to-back parentheses, i.e. ')(' vs. ') ('.
 extern Option<iarf_e>
@@ -866,6 +888,12 @@ sp_trailing_return;
 extern Option<iarf_e>
 sp_type_func;
 
+// Number of spaces between a return type and function name when sp_type_func
+// is add or force. Alignment may increase this gap. Pointer/reference-specific
+// spacing options take precedence, as they do for sp_type_func.
+extern BoundedOption<unsigned, 1, 16>
+sp_num_type_func; // = 1
+
 // Add or remove space between type and open brace of an unnamed temporary
 // direct-list-initialization.
 extern Option<iarf_e>
@@ -901,6 +929,11 @@ sp_inside_fparens;
 // Add or remove space inside function '(' and ')'.
 extern Option<iarf_e>
 sp_inside_fparen;
+
+// Add or remove space inside nonempty function declaration/definition parentheses.
+// Ignore falls back to sp_inside_fparen; empty lists use sp_inside_fparens.
+extern Option<iarf_e>
+sp_inside_fparen_decl;
 
 // Add or remove space inside user functor '(' and ')'.
 extern Option<iarf_e>
@@ -2098,6 +2131,12 @@ nl_cs_property_leave_one_liners;
 extern Option<bool>
 nl_func_leave_one_liners;
 
+// In preservation mode, retain compact class member definitions only up to
+// this visual line width, including indentation, expanded tabs and comments.
+// Zero disables the limit. Longer members use the configured newline rules.
+extern BoundedOption<unsigned, 0, 10000>
+nl_func_one_liner_max_columns;
+
 // Don't split one-line C++11 lambdas, as in '[]() { return 0; }'.
 extern Option<bool>
 nl_cpp_lambda_leave_one_liners;
@@ -2707,6 +2746,12 @@ nl_throw_expr;
 // Whether to add a newline after semicolons, except in 'for' statements.
 extern Option<bool>
 nl_after_semicolon;
+
+// In source-preserving output, put adjacent local variable declaration
+// statements on separate lines. For-loop headers and inline bodies retain
+// their layout. Disabled by default.
+extern Option<bool>
+nl_split_var_def;
 
 // (Java) Add or remove newline between the ')' and '{{' of the double brace
 // initializer.
@@ -3786,6 +3831,12 @@ align_var_struct_thresh;
 extern BoundedOption<unsigned, 0, 16>
 align_var_struct_gap;
 
+// In source-preserving output, align '=' in consecutive class/struct/union
+// field initializers. Other assignments retain their existing alignment.
+// 0: Don't align (default).
+extern BoundedOption<unsigned, 0, 5000>
+align_field_assign_span;
+
 // The span for aligning struct initializer values.
 //
 // 0: Don't align (default).
@@ -3904,6 +3955,18 @@ align_right_cmt_at_col;
 // 0: Don't align (default).
 extern BoundedOption<unsigned, 0, 5000>
 align_func_proto_span;
+
+// In preservation mode, align trailing exception/const macros of nearby direct
+// class/struct members. The span counts lines between declarations, including
+// blank and comment lines. Zero disables this alignment (default).
+extern BoundedOption<unsigned, 0, 5000>
+align_func_suffix_span;
+
+// Maximum visual column for class-member suffix macro alignment. Columns count
+// from the start of the line, including indentation and expanded tabs. Macros
+// beyond this column and groups requiring a larger column retain their gaps.
+extern BoundedOption<unsigned, 1, 1000>
+align_func_suffix_max_column; // = 100
 
 // Whether to ignore continuation lines when evaluating the number of
 // new lines for the function prototype alignment's span.

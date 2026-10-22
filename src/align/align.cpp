@@ -136,9 +136,12 @@ void align_all()
       align_oc_msg_colons();
    }
 
-   if (  (options::align_var_def_span() > 0)
-      || (options::align_var_struct_span() > 0)
-      || (options::align_var_class_span() > 0))
+   // The source writer aligns local declarations using emitted columns,
+   // including declaration statements split after the normal alignment pass.
+   if (  !options::preserve_source_layout()
+      && (  (options::align_var_def_span() > 0)
+         || (options::align_var_struct_span() > 0)
+         || (options::align_var_class_span() > 0)))
    {
       // Align variable definitions
       log_rule_B("align_var_def_span");

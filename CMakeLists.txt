@@ -378,6 +378,7 @@ set(uncrustify_sources
   src/rewrite_infinite_loops.cpp
   src/semicolons.cpp
   src/sorting.cpp
+  src/source_layout.cpp
   src/space.cpp
   src/token_is_within_trailing_return.cpp
   src/tokenizer/brace_cleanup.cpp
@@ -528,6 +529,7 @@ set(uncrustify_headers
   src/rewrite_infinite_loops.h
   src/semicolons.h
   src/sorting.h
+  src/source_layout.h
   src/space.h
   src/symbols_table.h
   src/token_enum.h

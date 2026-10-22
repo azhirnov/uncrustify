@@ -12,6 +12,7 @@
 #include "keywords.h"
 #include "prototypes.h"
 #include "punctuators.h"
+#include "source_layout.h"
 #include "unc_ctype.h"
 
 #include <deque>                    // to get deque<>
@@ -2725,7 +2726,7 @@ int find_enable_processing_comment_marker(const UncText &text,
 } // find_enable_processing_comment_marker
 
 
-void tokenize(const deque<int> &data, Chunk *ref)
+void tokenize(const deque<int> &data, Chunk *ref, SourceLayout *layout)
 {
    TokenContext ctx(data);
    Chunk        chunk;
@@ -2741,6 +2742,8 @@ void tokenize(const deque<int> &data, Chunk *ref)
    {
       chunk.Reset();
       chunk.SetPpLevel(0);
+
+      const size_t source_begin = ctx.c.idx;
 
       if (!parse_next(ctx, chunk, pc))
       {
@@ -2916,6 +2919,11 @@ void tokenize(const deque<int> &data, Chunk *ref)
             pc->SetFlagBits(PCF_IN_PREPROC);
             cpd.in_preproc = E_Token::CT_PREPROC;
          }
+      }
+
+      if (layout != nullptr)
+      {
+         layout->record(pc, source_begin, ctx.c.idx);
       }
 
       if (pc->Is(E_Token::CT_NEWLINE))

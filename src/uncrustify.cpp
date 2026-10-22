@@ -43,6 +43,7 @@
 #include "rewrite_infinite_loops.h"
 #include "semicolons.h"
 #include "sorting.h"
+#include "source_layout.h"
 #include "space.h"
 #include "token_names.h" // cppcheck-suppress missingInclude
 #include "tokenizer/brace_cleanup.h"
@@ -67,6 +68,7 @@
 #include <deque>
 #include <fcntl.h>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 #ifdef HAVE_UNISTD_H
@@ -124,7 +126,7 @@ static bool detect_oc_content(const std::vector<uint8_t> &raw);
 static bool read_stdin(MemoryFile &fm);
 
 
-static void uncrustify_start(const deque<int> &data);
+static void uncrustify_start(const deque<int> &data, SourceLayout *layout = nullptr);
 
 
 /**
@@ -2028,10 +2030,15 @@ static void add_msg_header(E_Token type, const MemoryFile &fm)
 } // add_msg_header
 
 
-static void uncrustify_start(const deque<int> &data)
+static void uncrustify_start(const deque<int> &data, SourceLayout *layout)
 {
    // Parse the text into chunks
-   tokenize(data, Chunk::NullChunkPtr);
+   tokenize(data, Chunk::NullChunkPtr, layout);
+
+   if (layout != nullptr)
+   {
+      layout->protect_macros();
+   }
    PROT_THE_LINE
 
    cpd.unc_stage = unc_stage_e::HEADER;
@@ -2162,7 +2169,23 @@ void uncrustify_file(const MemoryFile &fm, FILE *pfout, const char *parsed_file,
       }
    }
 
-   uncrustify_start(data);
+   std::deque<int>               field_data;
+   std::unique_ptr<SourceLayout> layout;
+
+   if (options::preserve_source_layout())
+   {
+      layout.reset(new SourceLayout(data));
+   }
+   uncrustify_start(data, layout.get());
+
+   // Field splitting changes tokens. Reparse the rewritten source before
+   // planning spacing, alignment, namespace indentation and conditional labels.
+   if (layout && options::mod_split_field_decl() && layout->split_fields(field_data))
+   {
+      uncrustify_end();
+      layout.reset(new SourceLayout(field_data));
+      uncrustify_start(field_data, layout.get());
+   }
    dump_step(dump_file, "After uncrustify_start()");
 
    cpd.unc_stage = unc_stage_e::OTHER;
@@ -2474,7 +2497,14 @@ void uncrustify_file(const MemoryFile &fm, FILE *pfout, const char *parsed_file,
    if (cpd.html_file == nullptr)
    {
       // Now render it all to the output file
-      output_text(pfout);
+      if (layout)
+      {
+         layout->output(pfout);
+      }
+      else
+      {
+         output_text(pfout);
+      }
    }
    else
    {

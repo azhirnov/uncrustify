@@ -211,6 +211,13 @@ Chunk *align_func_param(Chunk *start)
 void align_func_params()
 {
    LOG_FUNC_ENTRY();
+
+   if (options::preserve_source_layout())
+   {
+      // The source writer aligns one-argument-per-line lists using emitted
+      // columns, retaining lists with multiple arguments on a line.
+      return;
+   }
    Chunk *pc = Chunk::GetHead();
 
    while ((pc = pc->GetNext())->IsNotNullChunk())

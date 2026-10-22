@@ -24,6 +24,13 @@ void align_func_proto(size_t span)
 {
    LOG_FUNC_ENTRY();
 
+   if (options::preserve_source_layout())
+   {
+      // The source writer chooses spacing per class-member group. Aligning the
+      // transformed chunk list here would also move free functions and mix
+      // computed padding with the source writer's retained tabs.
+      return;
+   }
    size_t myspan   = span;
    size_t mythresh = 0;
 

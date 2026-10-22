@@ -263,3 +263,4 @@
 60017  oc/lambda_rvalue_ref.cfg                 oc/lambda_rvalue_ref.mm            OC+
 60018  common/empty.cfg                         oc/preproc_function_macro_alias.mm  OC+
 60019  oc/constructor_var_with_block.cfg        oc/constructor_var_with_block.mm    OC+
+60020  cpp/preserve_source_layout.cfg           oc/preserve_source_layout.mm         OC+
